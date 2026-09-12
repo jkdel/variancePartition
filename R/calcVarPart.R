@@ -318,9 +318,6 @@ cvp_glmm <- function(fit, returnFractions = TRUE, ...) {
 getVarianceComponents <- function(fit) {
   # get weights
   w <- weights(fit)
-  if (is.null(w)) {
-    w <- rep(1, nrow(fit$model))
-  }
 
   # get random effects estimates
   varComp <- lapply(lme4::VarCorr(fit), function(fit) attr(fit, "stddev")^2)
