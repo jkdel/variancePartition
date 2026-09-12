@@ -401,7 +401,6 @@ createContrastL <- function(formula, data, L) {
 
 #' @importFrom methods as
 combineResults <- function(exprObj, L, resList, univariateContrasts) {
-
   # only keep expression data from genes in resList
   exprObj <- exprObj[names(resList), seq(ncol(exprObj)), drop = FALSE]
 
@@ -425,55 +424,29 @@ combineResults <- function(exprObj, L, resList, univariateContrasts) {
     return(ret)
   }
 
-  extract_result = function(resList, key){
-
-    # get row names of the matrix with the most entries
-    rn = lapply(resList, function(x){
-      rownames(x$ret$coefficients)
-    })
-    rn = rn[[which.max(sapply(rn, length))]]
-
-    # extract entry in key and create a matrix across genes
-    # missing values are set to NA
-    v <- gtools::smartbind(list=lapply(resList, function(x){
-      values <- x$ret[[key]]
-      names(values) <- rownames(x$ret$coefficients)
-      t(values)
-      }))
-
-    # convert to matrix and order by rn
-    as.matrix(v)[,rn,drop=FALSE]
+  align_result <- function(l) {
+    rn <- names(l[[which.max(sapply(l, length))]])
+    do.call(rbind, lapply(l, \(x) x[rn]))
   }
 
-  coefficients <- extract_result( resList, "coefficients")
-  df.residual <- extract_result( resList, "df.residual")
-  pValue <- extract_result( resList, "pValue")
-  stdev.unscaled <- extract_result( resList, "stdev.unscaled")
+  extract_result <- function(resList, key) {
+    lapply(resList, \(x) {
+      setNames(t(x$ret[[key]])[1, ], rownames(x$ret$coefficients))
+    }) |> align_result()
+  }
 
-  # coefficients <- t(do.call(cbind, lapply(resList, function(x) x$ret$coefficients))) 
-  # rownames(coefficients) <- names(resList)
-  # colnames(coefficients) <- colnames(L)
-
-  # df.residual <- t(do.call(cbind, lapply(resList, function(x) x$ret$df.residual)))
-  # colnames(df.residual) <- colnames(L)
-
+  coefficients <- extract_result(resList, "coefficients")
+  df.residual <- extract_result(resList, "df.residual")
+  pValue <- extract_result(resList, "pValue")
+  stdev.unscaled <- extract_result(resList, "stdev.unscaled")
   rdf <- c(do.call(cbind, lapply(resList, function(x) x$ret$rdf)))
   names(rdf) <- names(resList)
-
-  # pValue <- t(do.call(cbind, lapply(resList, function(x) x$ret$pValue)))
-  # colnames(pValue) <- colnames(L)
-
-  # stdev.unscaled <- t(do.call(cbind, lapply(resList, function(x) x$ret$stdev.unscaled)))
-  # rownames(stdev.unscaled) <- names(resList)
-
-  residuals <- t(do.call(cbind, lapply(resList, function(x) x$ret$residuals)))
-
-  hatvalues <- t(do.call(cbind, lapply(resList, function(x) x$hatvalues)))
-
+  residuals <- align_result(lapply(resList, function(x) x$ret$residuals))
+  hatvalues <- align_result(lapply(resList, function(x) x$hatvalues))
   logLik <- sapply(resList, function(x) x$logLik)
 
   # Get design matrix with all coefs present
-  rn <- lapply(resList, function(x){
+  rn <- lapply(resList, function(x) {
     rownames(x$ret$coefficients)
   })
   i <- which.max(sapply(rn, length))
