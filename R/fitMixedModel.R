@@ -1,24 +1,22 @@
 ## default control for lmer fits
 vpcontrol <- lme4::lmerControl(
   calc.derivs = FALSE,
-  check.rankX = "stop.deficient",
-  check.conv.singular =
-    lme4::.makeCC("ignore", tol = 1e-4)
+  check.rankX = "silent.drop.cols",
+  check.conv.singular = lme4::.makeCC("ignore", tol = 1e-4)
 )
 
 vpcontrol.NM <- lme4::lmerControl(
   optimizer = "Nelder_Mead",
   calc.derivs = FALSE,
-  check.rankX = "stop.deficient",
-  check.conv.singular =
-    lme4::.makeCC("ignore", tol = 1e-4)
+  check.rankX = "silent.drop.cols",
+  check.conv.singular = lme4::.makeCC("ignore", tol = 1e-4)
 )
 
 
 
 #' @importFrom lme4 lmer refit
 #' @importFrom stats update
-run_lmm_on_gene <- function(obj, formula, data, control, na.action, REML, fxn, fit.init = NULL, dreamCheck = FALSE, varTol = 1e-5, rescaleWeights=TRUE) {
+run_lmm_on_gene <- function(obj, formula, data, control, REML, fxn, fit.init = NULL, dreamCheck = FALSE, varTol = 1e-5, rescaleWeights=TRUE) {
   # if sparseMatrix, convert to matrix
   if (is(obj$E, "dgCMatrix")) {
     obj$E <- as.matrix(obj$E)
@@ -54,7 +52,7 @@ run_lmm_on_gene <- function(obj, formula, data, control, na.action, REML, fxn, f
       fit <- lmer(form.local, data,
         weights = w.local,
         control = control,
-        na.action = na.action,
+        # na.action = na.action,
         REML = REML
       )
     }
@@ -70,8 +68,8 @@ run_lmm_on_gene <- function(obj, formula, data, control, na.action, REML, fxn, f
     fit <- refit(fit, control = control)
   } else {
     fit <- lm(form.local, data,
-      weights = w.local,
-      na.action = na.action
+      weights = w.local
+      # na.action = na.action
     )
   }
 
@@ -87,7 +85,7 @@ run_lmm_on_gene <- function(obj, formula, data, control, na.action, REML, fxn, f
 
 # run analysis on each batch
 #' @importFrom BiocParallel bpstopOnError<- bptry bplapply SerialParam
-run_lmm_on_batch <- function(obj, form, data, control, na.action, REML, fxn, fit.init = NULL, dreamCheck = FALSE, varTol = 1e-5, rescaleWeights=TRUE) {
+run_lmm_on_batch <- function(obj, form, data, control, REML, fxn, fit.init = NULL, dreamCheck = FALSE, varTol = 1e-5, rescaleWeights=TRUE) {
   # create list with one gene per entry
   exprList <- lapply(seq(nrow(obj)), function(j) {
     new("EList", list(
@@ -111,7 +109,7 @@ run_lmm_on_batch <- function(obj, form, data, control, na.action, REML, fxn, fit
     form = form,
     data = data,
     control = control,
-    na.action = na.action,
+    # na.action = na.action,
     REML = REML,
     fxn = fxn,
     fit.init = fit.init,
@@ -170,7 +168,7 @@ run_lmm <- function(obj, form, data, control = vpcontrol, fxn, REML = FALSE, use
     {
       run_lmm_on_gene(it.init(), form, data,
         control = control,
-        na.action = stats::na.exclude,
+        # na.action = stats::na.exclude,
         REML = REML,
         fxn = identity,
         dreamCheck = dreamCheck
@@ -208,7 +206,7 @@ run_lmm <- function(obj, form, data, control = vpcontrol, fxn, REML = FALSE, use
     form = form,
     data = data,
     control = control,
-    na.action = stats::na.exclude,
+    # na.action = stats::na.exclude,
     REML = REML,
     fit.init = fit.init,
     dreamCheck = dreamCheck,
@@ -261,33 +259,33 @@ filterInputData <- function(exprObj, formula, data, weights = NULL, useWeights =
     stop("the number of samples in exprObj (i.e. cols) must be the same as in data (i.e rows)")
   }
 
-  # check if variables in formula has NA's
-  hasNA <- hasMissingData(formula, data)
+  # # check if variables in formula has NA's
+  # hasNA <- hasMissingData(formula, data)
 
-  if (any(hasNA)) {
-    warning(paste("\nVariables contain NA's:", paste(names(hasNA[hasNA]), collapse = ", "), "\nSamples with missing data will be dropped.\n"), immediate. = TRUE, call. = FALSE)
+  # if (any(hasNA)) {
+  #   warning(paste("\nVariables contain NA's:", paste(names(hasNA[hasNA]), collapse = ", "), "\nSamples with missing data will be dropped.\n"), immediate. = TRUE, call. = FALSE)
 
-    # drop samples with missing data in formula variables
-    idx <- sapply(all.vars(formula), function(v) {
-      which(is.na(data[[v]]))
-    })
-    idx <- unique(unlist(idx))
+  #   # drop samples with missing data in formula variables
+  #   idx <- sapply(all.vars(formula), function(v) {
+  #     which(is.na(data[[v]]))
+  #   })
+  #   idx <- unique(unlist(idx))
 
-    data <- droplevels(data[-idx, , drop = FALSE])
+  #   data <- droplevels(data[-idx, , drop = FALSE])
 
-    if( is(exprObj, "DGEList") ){
-      exprObj <- exprObj[, -idx]
-    }else{      
-      exprObj <- exprObj[, -idx, drop = FALSE]
-    }
-    if( !is.null(weights) ){
-      if( is.matrix(weights) ){
-        weights <- weights[, -idx, drop = FALSE]
-      }else{        
-        weights <- weights[-idx]
-      }
-    }
-  }
+  #   if( is(exprObj, "DGEList") ){
+  #     exprObj <- exprObj[, -idx]
+  #   }else{      
+  #     exprObj <- exprObj[, -idx, drop = FALSE]
+  #   }
+  #   if( !is.null(weights) ){
+  #     if( is.matrix(weights) ){
+  #       weights <- weights[, -idx, drop = FALSE]
+  #     }else{        
+  #       weights <- weights[-idx]
+  #     }
+  #   }
+  # }
 
   if (!isCounts) {
     # convert exprObj to EList if not already

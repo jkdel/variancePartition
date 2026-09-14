@@ -276,31 +276,6 @@ setMethod(
 # 			vcov 	= V )
 # }
 
-
-#' @importFrom methods is
-.checkNA <- function(exprObj) {
-  if (is(exprObj, "sparseMatrix") || is(exprObj, "matrix")) {
-    countNA <- sum(!is.finite(exprObj))
-  } else {
-    # is.finite is not defined for data.frames, so convert to matrix first
-    countNA <- sum(!is.finite(as.matrix(exprObj)))
-
-    # check if values are NA
-    # countNA = sum(!is.finite(exprObj)) # sum(is.nan(exprObj))
-  }
-
-  if (countNA > 0) {
-    stop("There are ", countNA, " NA/NaN/Inf values in exprObj\nMissing data is not allowed")
-  }
-
-  # check if all genes have variance
-  rv <- apply(exprObj, 1, var)
-  if (any(rv == 0)) {
-    idx <- which(rv == 0)
-    stop(paste("Response variable", idx[1], "has a variance of 0"))
-  }
-}
-
 #' Compute standard post-processing values
 #'
 #' These values are typically computed by eBayes
