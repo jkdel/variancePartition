@@ -77,5 +77,5 @@ Imports:
     methods,
     utils,
     stats
-RoxygenNote: 7.3.3
 RdMacros: Rdpack
+Config/roxygen2/version: 8.1.0

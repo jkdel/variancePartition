@@ -123,7 +123,7 @@ dream <- function(exprObj,
   if (.isMixedModelFormula(formula)) {
     # run model
     res <- run_lmm(objFlt$exprObj, objFlt$formula, objFlt$data,
-      fxn = create_eval_dream(L = ctst$L, ddf = ddf, ctst$ univariateContrasts),
+      fxn = create_eval_dream(L = ctst$L, ddf = ddf, ctst$univariateContrasts),
       REML = REML,
       control = control,
       BPPARAM = BPPARAM,
@@ -132,19 +132,20 @@ dream <- function(exprObj,
       # rescaleWeights = FALSE,
       ...
     )
-
+    
     if (!is.null(res$error.initial) & !hideErrorsInBackend) {
       stop(paste0("Initial model failed:\n", res$error.initial))
     }
-
+    
     res.unlist <- unlist(res$succeeded, recursive = FALSE)
-
+    
     if (length(res.unlist) == 0 & !hideErrorsInBackend) {
       txt <- paste("All models failed.  The first model fails with:\n", res$errors[1])
       stop(txt)
     }
-
-    res2 <- combineResults(objFlt$exprObj, ctst$L, res.unlist, ctst$univariateContrasts)
+    
+    design <- model.matrix(nobars(objFlt$formula), objFlt$data)
+    res2 <- combineResults(objFlt$exprObj, ctst$L, res.unlist, ctst$univariateContrasts, design)
 
     attr(res2, "error.initial") <- res$error.initial
     attr(res2, "errors") <- res$errors
@@ -217,7 +218,6 @@ create_eval_dream <- function(L, ddf, univariateContrasts) {
 
     ret <- list(
       coefficients = mod$beta,
-      design = fit@pp$X,
       # approximate df of residuals
       rdf = rdf.merMod(fit),
       # df of test statistics
@@ -251,7 +251,7 @@ create_eval_dream <- function(L, ddf, univariateContrasts) {
       varComp = varComp,
       logLik = as.numeric(logLik(fit)),
       # effective degrees of freedom as sum of diagonals of hat matrix
-      edf = sum(h),
+      edf = sum(h, na.rm = T),
       hatvalues = h,
       vcov = V
     )
@@ -400,7 +400,7 @@ createContrastL <- function(formula, data, L) {
 
 
 #' @importFrom methods as
-combineResults <- function(exprObj, L, resList, univariateContrasts) {
+combineResults <- function(exprObj, L, resList, univariateContrasts, design) {
   # only keep expression data from genes in resList
   exprObj <- exprObj[names(resList), seq(ncol(exprObj)), drop = FALSE]
 
@@ -444,14 +444,6 @@ combineResults <- function(exprObj, L, resList, univariateContrasts) {
   residuals <- align_result(lapply(resList, function(x) x$ret$residuals))
   hatvalues <- align_result(lapply(resList, function(x) x$hatvalues))
   logLik <- sapply(resList, function(x) x$logLik)
-
-  # Get design matrix with all coefs present
-  rn <- lapply(resList, function(x) {
-    rownames(x$ret$coefficients)
-  })
-  i <- which.max(sapply(rn, length))
-  design <- resList[[i]]$ret$design
-
   Amean <- sapply(resList, function(x) x$ret$Amean)
   sigma <- sapply(resList, function(x) x$ret$sigma)
 
@@ -471,7 +463,7 @@ combineResults <- function(exprObj, L, resList, univariateContrasts) {
     rdf = c(rdf),
     df.residual = df.residual,
     hatvalues = hatvalues,
-    edf = rowSums(hatvalues),
+    edf = rowSums(hatvalues, na.rm = T),
     logLik = logLik,
     Amean = Amean,
     method = "lmer",

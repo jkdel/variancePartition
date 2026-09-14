@@ -39,7 +39,7 @@ run_lmm_on_gene <- function(obj, formula, data, control, REML, fxn, fit.init = N
   }
 
   if (.isMixedModelFormula(formula)) {
-    if (!is.null(fit.init) & ! any(is.na(data)) ) {
+    if (!is.null(fit.init) & !(anyNA(data$y.local) || anyNA(data$w.local))) {
       # if fit.init is passed, use refit
       # issue with stopping criteria.  fixed with new lmer() call
       fit <- refit(fit.init,
@@ -52,7 +52,7 @@ run_lmm_on_gene <- function(obj, formula, data, control, REML, fxn, fit.init = N
       fit <- lmer(form.local, data,
         weights = w.local,
         control = control,
-        # na.action = na.action,
+        # na.action = na.exclude,
         REML = REML
       )
     }
@@ -259,33 +259,33 @@ filterInputData <- function(exprObj, formula, data, weights = NULL, useWeights =
     stop("the number of samples in exprObj (i.e. cols) must be the same as in data (i.e rows)")
   }
 
-  # # check if variables in formula has NA's
-  # hasNA <- hasMissingData(formula, data)
+  # check if variables in formula has NA's
+  hasNA <- hasMissingData(formula, data)
 
-  # if (any(hasNA)) {
-  #   warning(paste("\nVariables contain NA's:", paste(names(hasNA[hasNA]), collapse = ", "), "\nSamples with missing data will be dropped.\n"), immediate. = TRUE, call. = FALSE)
+  if (any(hasNA)) {
+    warning(paste("\nVariables contain NA's:", paste(names(hasNA[hasNA]), collapse = ", "), "\nSamples with missing data will be dropped.\n"), immediate. = TRUE, call. = FALSE)
 
-  #   # drop samples with missing data in formula variables
-  #   idx <- sapply(all.vars(formula), function(v) {
-  #     which(is.na(data[[v]]))
-  #   })
-  #   idx <- unique(unlist(idx))
+    # drop samples with missing data in formula variables
+    idx <- sapply(all.vars(formula), function(v) {
+      which(is.na(data[[v]]))
+    })
+    idx <- unique(unlist(idx))
 
-  #   data <- droplevels(data[-idx, , drop = FALSE])
+    data <- droplevels(data[-idx, , drop = FALSE])
 
-  #   if( is(exprObj, "DGEList") ){
-  #     exprObj <- exprObj[, -idx]
-  #   }else{      
-  #     exprObj <- exprObj[, -idx, drop = FALSE]
-  #   }
-  #   if( !is.null(weights) ){
-  #     if( is.matrix(weights) ){
-  #       weights <- weights[, -idx, drop = FALSE]
-  #     }else{        
-  #       weights <- weights[-idx]
-  #     }
-  #   }
-  # }
+    if( is(exprObj, "DGEList") ){
+      exprObj <- exprObj[, -idx]
+    }else{      
+      exprObj <- exprObj[, -idx, drop = FALSE]
+    }
+    if( !is.null(weights) ){
+      if( is.matrix(weights) ){
+        weights <- weights[, -idx, drop = FALSE]
+      }else{        
+        weights <- weights[-idx]
+      }
+    }
+  }
 
   if (!isCounts) {
     # convert exprObj to EList if not already

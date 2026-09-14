@@ -322,8 +322,8 @@ setMethod(
       } else {
         F.p.value <- pf(c(F.stat), df1, df2, lower.tail = FALSE)
       }
-      out$F <- rep( NULL, length(i))
-      out$F.p.value <- rep( NULL, length(i))
+      out$F <- rep(NA_real_, length(i))
+      out$F.p.value <- rep(NA_real_, length(i))
       out$F[i] <- as.vector(F.stat)
       out$F.p.value[i] <- F.p.value
     }

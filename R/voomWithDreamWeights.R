@@ -136,7 +136,7 @@ voomWithDreamWeights <- function(counts, formula, data, lib.size = NULL, normali
   
   # rescale input weights to have mean 1 
   # before scaling output weights
-  weightsMatrix <- weightsMatrix / rowMeans(weightsMatrix)  
+  weightsMatrix <- weightsMatrix / rowMeans(weightsMatrix, na.rm = T)  
 
   # put weights into EList
   obj <- new("EList", list(E = y, weights = weightsMatrix))
@@ -263,7 +263,7 @@ voomWithDreamWeights <- function(counts, formula, data, lib.size = NULL, normali
     w <- weightsMatrix[keepGenes,,drop=FALSE]
 
     out$weights <- w * out$weights
-    out$targets$sample.weights <- colMeans(weightsMatrix)
+    out$targets$sample.weights <- colMeans(weightsMatrix, na.rm = T)
   }
   
   # remove rownames to be compatible with voom()
