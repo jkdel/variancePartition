@@ -62,8 +62,8 @@ setMethod("get_prediction", "lmerMod", function(fit, formula) {
     # Get sum of BLUP's for the specified random effects
 
     ran_form <- reOnly(formula)
-
-    pred_rand <- predict(fit, re.form = ran_form, random.only = TRUE, allow.new.levels = T)
+    # explicitely specify na.action as na.omit to make sure that neither pred_rand and pred_fixed are padded for NA, then pad for NA before returning
+    pred_rand <- predict(fit, re.form = ran_form, random.only = TRUE, na.action = na.omit)
   }
 
   # FIXED
@@ -109,5 +109,10 @@ setMethod("get_prediction", "lm", function(fit, formula) {
   y_pred <- as.numeric(dsgn %*% beta)
   names(y_pred) <- rownames(dsgn)
 
+  nas <- fit$na.action
+  if (!is.null(nas)) {
+    attr(nas, "class") <- "exclude"
+    y_pred <- naresid(nas, y_pred)
+  }
   y_pred
 })
