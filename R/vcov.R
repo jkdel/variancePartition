@@ -172,7 +172,7 @@ eval_vcov <- function(resids, X, W, rdf, coef, contrasts) {
   }
 
   # scale weights to have mean 1 for each column
-  W <- sweep(W, 2, colMeans(W, na.rm = T), "/")
+  W <- sweep(W, 2, colMeans(W, na.rm = TRUE), "/")
 
   # pre-compute square root of W
   sqrtW <- sqrt(W)
@@ -269,7 +269,7 @@ eval_vcov_approx <- function(resids, W, ccl, X, coef, contrasts) {
   }
 
   # scale weights to have mean 1
-  W <- sweep(W, 2, colMeans(W, na.rm = T), "/")
+  W <- sweep(W, 2, colMeans(W, na.rm = TRUE), "/")
 
   # store dimensions of data
   k <- ncol(ccl[[1]])

@@ -199,7 +199,7 @@ create_eval_dream <- function(L, ddf, univariateContrasts) {
     fit <- as_lmerModLmerTest2(x)
 
     # only retain contrasts for coefs that are estimated
-    L = L[names(fixef(fit)),]
+    L <- L[names(fixef(fit)), , drop = FALSE]
 
     # check L
     if (!identical(rownames(L), names(fixef(fit)))) {
@@ -251,7 +251,7 @@ create_eval_dream <- function(L, ddf, univariateContrasts) {
       varComp = varComp,
       logLik = as.numeric(logLik(fit)),
       # effective degrees of freedom as sum of diagonals of hat matrix
-      edf = sum(h, na.rm = T),
+      edf = sum(h, na.rm = TRUE),
       hatvalues = h,
       vcov = V
     )
@@ -464,7 +464,7 @@ combineResults <- function(exprObj, L, resList, univariateContrasts, design) {
     rdf = c(rdf),
     df.residual = df.residual,
     hatvalues = hatvalues,
-    edf = rowSums(hatvalues, na.rm = T),
+    edf = rowSums(hatvalues, na.rm = TRUE),
     logLik = logLik,
     Amean = Amean,
     method = "lmer",

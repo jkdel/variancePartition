@@ -197,7 +197,7 @@ eval_vcov_sqrt <- function(resids, X, W, rdf, coef, contrasts, approx) {
   }
 
   # scale weights to have mean 1 for each column
-  W <- sweep(W, 2, colMeans(W, na.rm = T), "/")
+  W <- sweep(W, 2, colMeans(W, na.rm = TRUE), "/")
 
   # pre-compute square root of W
   sqrtW <- sqrt(W)
