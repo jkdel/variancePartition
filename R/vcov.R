@@ -72,7 +72,7 @@ setMethod("vcov", c("MArrayLM"), function(object, vobj, coef) {
     resids = resids,
     X = object$design,
     W = weights[rownames(resids), , drop = FALSE],
-    rdf = object$df.residual[1],
+    rdf = object$df.residual,
     coef = coef,
     contrasts = object$contrasts
   )
@@ -178,7 +178,7 @@ eval_vcov <- function(resids, X, W, rdf, coef, contrasts) {
   sqrtW <- sqrt(W)
 
   # all pairs of responses
-  Sigma <- crossprod(resids * sqrtW)
+  Sigma <- crossprod(replace(resids,is.na(resids),0) * sqrtW)
 
   # store dimensions of data
   k <- ncol(X)
@@ -206,7 +206,7 @@ eval_vcov <- function(resids, X, W, rdf, coef, contrasts) {
       B <- solve(crossprod(X_j), t(X_j))
 
       # standard method using observed covariates
-      value <- (Sigma[i, j] / rdf) * tcrossprod(A, B)
+      value <- (Sigma[i, j] / rdf[m]) * tcrossprod(A, B)
 
       Sigma_vcov[idx1, idx2] <- value
       Sigma_vcov[idx2, idx1] <- value
@@ -277,7 +277,7 @@ eval_vcov_approx <- function(resids, W, ccl, X, coef, contrasts) {
 
   # residual correlation
   scale_res <- scale(resids * sqrt(W)) / sqrt(colSums(!is.na(resids)) - 1)
-  Sigma <- crossprod(scale_res)
+  Sigma <- crossprod(replace(scale_res, is.na(scale_res), 0))
 
   # matrix to store results
   Sigma_vcov <- matrix(0, m * k, m * k)

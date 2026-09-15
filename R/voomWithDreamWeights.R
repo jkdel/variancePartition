@@ -246,6 +246,7 @@ voomWithDreamWeights <- function(counts, formula, data, lib.size = NULL, normali
 
   # 	Apply trend to individual observations
   w <- 1 / f(fitted.logcount)^4
+  w[is.na(w)] <- 0 # 0 weights at missing observations, as in limma
   dim(w) <- dim(fitted.logcount)
 
   # 	Output
