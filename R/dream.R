@@ -424,25 +424,26 @@ combineResults <- function(exprObj, L, resList, univariateContrasts, design) {
     return(ret)
   }
 
-  align_result <- function(l) {
-    rn <- names(l[[which.max(sapply(l, length))]])
-    do.call(rbind, lapply(l, \(x) x[rn]))
+  cn <- colnames(design)
+  rn <- rownames(design)
+  align_result <- function(l, al) {
+    do.call(rbind, lapply(l, \(x) setNames(x[al], al)))
   }
 
-  extract_result <- function(resList, key) {
+  extract_result <- function(resList, key, al) {
     lapply(resList, \(x) {
       setNames(t(x$ret[[key]])[1, ], rownames(x$ret$coefficients))
-    }) |> align_result()
+    }) |> align_result(al)
   }
 
-  coefficients <- extract_result(resList, "coefficients")
-  df.residual <- extract_result(resList, "df.residual")
-  pValue <- extract_result(resList, "pValue")
-  stdev.unscaled <- extract_result(resList, "stdev.unscaled")
+  coefficients <- extract_result(resList, "coefficients", cn)
+  df.residual <- extract_result(resList, "df.residual", cn)
+  pValue <- extract_result(resList, "pValue", cn)
+  stdev.unscaled <- extract_result(resList, "stdev.unscaled", cn)
   rdf <- c(do.call(cbind, lapply(resList, function(x) x$ret$rdf)))
   names(rdf) <- names(resList)
-  residuals <- align_result(lapply(resList, function(x) x$ret$residuals))
-  hatvalues <- align_result(lapply(resList, function(x) x$hatvalues))
+  residuals <- align_result(lapply(resList, function(x) x$ret$residuals), rn)
+  hatvalues <- align_result(lapply(resList, function(x) x$hatvalues), rn)
   logLik <- sapply(resList, function(x) x$logLik)
   Amean <- sapply(resList, function(x) x$ret$Amean)
   sigma <- sapply(resList, function(x) x$ret$sigma)
