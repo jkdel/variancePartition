@@ -52,7 +52,8 @@ run_lmm_on_gene <- function(obj, formula, data, control, REML, fxn, fit.init = N
       fit <- lmer(form.local, data,
         weights = w.local,
         control = control,
-        # na.action = na.exclude,
+        # na.omit is prefered because merMod internals do not include NA values but functions such as predict would pad for NA values -> resolve mismatch and align everything manually
+        na.action = na.omit,
         REML = REML
       )
     }
@@ -67,9 +68,12 @@ run_lmm_on_gene <- function(obj, formula, data, control, REML, fxn, fit.init = N
     # convergence
     fit <- refit(fit, control = control)
   } else {
-    fit <- lm(form.local, data,
-      weights = w.local
-      # na.action = na.action
+    fit <- lm(
+      form.local,
+      data,
+      weights = w.local,
+      # na.omit is prefered because merMod internals do not include NA values but functions such as predict would pad for NA values -> resolve mismatch and align everything manually
+      na.action = na.omit
     )
   }
 
@@ -109,7 +113,6 @@ run_lmm_on_batch <- function(obj, form, data, control, REML, fxn, fit.init = NUL
     form = form,
     data = data,
     control = control,
-    # na.action = na.action,
     REML = REML,
     fxn = fxn,
     fit.init = fit.init,
@@ -168,7 +171,6 @@ run_lmm <- function(obj, form, data, control = vpcontrol, fxn, REML = FALSE, use
     {
       run_lmm_on_gene(it.init(), form, data,
         control = control,
-        # na.action = stats::na.exclude,
         REML = REML,
         fxn = identity,
         dreamCheck = dreamCheck
@@ -206,7 +208,6 @@ run_lmm <- function(obj, form, data, control = vpcontrol, fxn, REML = FALSE, use
     form = form,
     data = data,
     control = control,
-    # na.action = stats::na.exclude,
     REML = REML,
     fit.init = fit.init,
     dreamCheck = dreamCheck,
