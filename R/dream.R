@@ -288,7 +288,7 @@ eval_contrasts <- function(fit, L, ddf, kappa.tol = 1e6, pd.tol = 1e-8) {
 
   #  keep only contrants witn some non-zero entries
   keep <- colSums(abs(L)) != 0
-  L <- L[,keep]
+  L <- L[, keep, drop = FALSE]
 
   warn = getOption("warn")
   options(warn=1)
@@ -424,7 +424,7 @@ combineResults <- function(exprObj, L, resList, univariateContrasts, design) {
     return(ret)
   }
 
-  cn <- colnames(design)
+  cn <- colnames(L)
   rn <- rownames(design)
   align_result <- function(l, al) {
     do.call(rbind, lapply(l, \(x) setNames(x[al], al)))
