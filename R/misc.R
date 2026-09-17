@@ -213,9 +213,9 @@ setMethod(
       resMatrix <- Reduce(
         \(x, y) merge(x, y, all = T, by = 0) |> transform(row.names = Row.names, Row.names = NULL),
         x = res
-      ) |> as.matrix()
+      ) |> t()
     } else {
-      resMatrix <- do.call(cbind, res)
+      resMatrix <- do.call(rbind, res)
     }
 
     # identify which samples were omitted
