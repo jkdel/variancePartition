@@ -41,6 +41,8 @@ setMethod(
     weights[is.na(vobj$E)] <- 0
     hv <- lapply(seq(nrow(vobj)), function(j) {
       X <- sqrt(weights[j, ]) * model$design
+      # Drop zero columns (e.g., fully missing factor level), since they are unidentifiable
+      X <- X[, colSums(X != 0) > 0, drop = FALSE]
 
       # compure full H matrix
       # H = X %*% solve(crossprod(X), t(X))
